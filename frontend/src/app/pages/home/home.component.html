@@ -1,0 +1,23 @@
+<div class="home-container">
+  <div class="home-card">
+    <div class="success-icon">✓</div>
+    <h1>Welcome! 🎬</h1>
+
+    @if (user(); as currentUser) {
+    <div class="user-info">
+      <p class="welcome-text">
+        Connected as <strong>{{ currentUser.username }}</strong>
+      </p>
+      <p class="email-text">{{ currentUser.email }}</p>
+    </div>
+    }
+
+    <div class="info-box">
+      <h2>Temporary page</h2>
+      <p>Temporary page to test auth</p>
+      <div class="actions">
+        <button class="btn-logout" (click)="logout()"><span>🚪</span> Logout</button>
+      </div>
+    </div>
+  </div>
+</div>
