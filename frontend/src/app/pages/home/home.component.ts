@@ -1,21 +1,24 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TmdbService } from '../../services/tmdb.service';
 import { Movie } from '../../models/tmdb.model';
 import { HeroBannerComponent } from "../../components/hero-banner/hero-banner";
 import { MovieRowComponent } from '../../components/movie-row/movie-row';
+import { NavbarComponent } from '../../shared-componants/navbar/navbar';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, HeroBannerComponent, MovieRowComponent],
+  imports: [CommonModule, HeroBannerComponent, MovieRowComponent ,NavbarComponent],
   templateUrl: './home.component.html',
   styleUrl: "./home.component.css" 
 })
 export class HomeComponent implements OnInit {
   bannerMovie: Movie | null = null;
 
-  constructor(private tmdbService: TmdbService) {}
+  constructor() {}
+
+  private tmdbService: TmdbService = inject(TmdbService);
 
   ngOnInit() {
     // Fetch Trending movies to pick one for the banner

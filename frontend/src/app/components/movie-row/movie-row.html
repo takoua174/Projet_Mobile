@@ -5,7 +5,7 @@
     <div class="slider-container" #scrollContainer (scroll)="onScroll()">
       <div class="posters-wrapper">
         <div class="poster-item" *ngFor="let movie of movies; let i = index">
-          <div class="poster-card" [class.poster-large]="isLarge">
+          <div class="poster-card" [class.poster-large]="isLarge" (click)="navigateToDetail(movie.id)">
             <img [src]="getPoster(movie.poster_path)" [alt]="movie.title" class="poster-image" loading="lazy">
 
             <div class="poster-overlay">
