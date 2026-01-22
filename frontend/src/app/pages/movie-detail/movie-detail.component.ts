@@ -101,5 +101,5 @@ export class MovieDetailComponent implements OnInit {
   // Event handlers
   onVideoSelect(video: Video) { this.selectedVideo.set(video); }
   onMovieClick(movie: Movie) { this.router.navigate(['/movie', movie.id]); }
-  goBack() { this.router.navigate(['/home']); }
+  goBack() { this.router.navigate(['/movie']); }
 }
