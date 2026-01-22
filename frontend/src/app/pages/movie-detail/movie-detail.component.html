@@ -1,9 +1,7 @@
 <div class="movie-detail-container" *ngIf="!loading() && movieDetails()">
   <!-- Backdrop Header -->
-  <div
-    class="backdrop-header"
-    [style.background-image]="'url(' + getBackdropUrl(movieDetails()?.backdrop_path ?? null) + ')'"
-  >
+  <div class="backdrop-header"
+    [style.background-image]="'url(' + getBackdropUrl(movieDetails()?.backdrop_path ?? null) + ')'">
     <div class="backdrop-overlay">
       <div class="header-content">
         <button class="back-button" (click)="goBack()">
@@ -18,11 +16,7 @@
     <div class="main-info">
       <!-- Poster -->
       <div class="poster-section">
-        <img
-          [src]="getPosterUrl(movieDetails()?.poster_path ?? null)"
-          [alt]="movieDetails()?.title"
-          class="poster"
-        />
+        <img [src]="getPosterUrl(movieDetails()?.poster_path ?? null)" [alt]="movieDetails()?.title" class="poster" />
       </div>
 
       <!-- Details -->
@@ -95,11 +89,8 @@
       <div class="trailers-grid">
         <div class="trailer-card" *ngFor="let video of videos()" (click)="playTrailer(video)">
           <div class="trailer-thumbnail">
-            <img
-              [src]="'https://img.youtube.com/vi/' + video.key + '/hqdefault.jpg'"
-              [alt]="video.name"
-              class="thumbnail-image"
-            />
+            <img [src]="'https://img.youtube.com/vi/' + video.key + '/hqdefault.jpg'" [alt]="video.name"
+              class="thumbnail-image" />
             <div class="play-overlay">
               <div class="play-button">
                 <svg width="50" height="50" viewBox="0 0 24 24" fill="white">
@@ -121,11 +112,9 @@
       <h2 class="section-title">Top Cast</h2>
       <div class="cast-grid">
         <div class="cast-card" *ngFor="let member of cast()">
-          <img
-            [src]="getProfileUrl(member.profile_path)"
-            [alt]="member.name"
-            class="cast-image"
-          />
+          <img [src]="getProfileUrl(member.profile_path) | defaultImage " 
+          [alt]="member.name" 
+          class="cast-image" />
           <div class="cast-info">
             <p class="cast-name">{{ member.name }}</p>
             <p class="cast-character">{{ member.character }}</p>
@@ -141,12 +130,8 @@
         <div class="review-card" *ngFor="let review of reviews()">
           <div class="review-header">
             <div class="review-author">
-              <img
-                *ngIf="review.author_details.avatar_path"
-                [src]="getProfileUrl(review.author_details.avatar_path)"
-                [alt]="review.author"
-                class="author-avatar"
-              />
+              <img *ngIf="review.author_details.avatar_path" [src]="getProfileUrl(review.author_details.avatar_path)"
+                [alt]="review.author" class="author-avatar" />
               <div class="author-avatar-placeholder" *ngIf="!review.author_details.avatar_path">
                 {{ review.author.charAt(0).toUpperCase() }}
               </div>
@@ -168,11 +153,7 @@
     <section class="similar-section" *ngIf="similarMovies().length > 0">
       <h2 class="section-title">Similar Movies</h2>
       <div class="similar-grid">
-        <div
-          class="similar-card"
-          *ngFor="let movie of similarMovies()"
-          (click)="navigateToMovie(movie.id)"
-        >
+        <div class="similar-card" *ngFor="let movie of similarMovies()" (click)="navigateToMovie(movie.id)">
           <img [src]="getPosterUrl(movie.poster_path)" [alt]="movie.title" class="similar-poster" />
           <div class="similar-info">
             <p class="similar-title">{{ movie.title }}</p>
@@ -185,12 +166,8 @@
 </div>
 
 <!-- YouTube Player Modal -->
-<app-youtube-player
-  *ngIf="showPlayer()"
-  [videoKey]="selectedVideo()?.key ?? null"
-  [videoTitle]="selectedVideo()?.name ?? 'Trailer'"
-  (close)="closePlayer()"
-></app-youtube-player>
+<app-youtube-player *ngIf="showPlayer()" [videoKey]="selectedVideo()?.key ?? null"
+  [videoTitle]="selectedVideo()?.name ?? 'Trailer'" (close)="closePlayer()"></app-youtube-player>
 
 <!-- Loading State -->
 <div class="loading-container" *ngIf="loading()">

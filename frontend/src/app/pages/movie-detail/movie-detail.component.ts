@@ -13,11 +13,12 @@ import {
 } from '../../models/tmdb.model';
 import { forkJoin } from 'rxjs';
 import { YoutubePlayerComponent } from '../../components/youtube-player/youtube-player.component';
+import { DefaultImagePipe } from '../../pipe/default-image-pipe';
 
 @Component({
   selector: 'app-movie-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink, YoutubePlayerComponent],
+  imports: [CommonModule, RouterLink, YoutubePlayerComponent , DefaultImagePipe],
   templateUrl: './movie-detail.component.html',
   styleUrl: './movie-detail.component.css',
 })
