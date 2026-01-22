@@ -17,8 +17,17 @@ export const routes: Routes = [
   {
     path: 'home',
     loadComponent: () => import('./pages/home/home.component').then((m) => m.HomeComponent),
+    canActivate: [authGuard],
     
   },
+
+  {
+    path: 'movie',
+    loadComponent: () => import('./pages/movie/movie.component').then((m) => m.MovieComponent),
+    canActivate: [authGuard],
+    
+  },
+
   {
     path: 'movie/:id',
     loadComponent: () =>
@@ -38,6 +47,7 @@ export const routes: Routes = [
   },
   {
     path: '**',
-    redirectTo: '/home',
+    loadComponent: () =>
+      import('./pages/not-found/not-found').then((m) => m.NotFoundComponent),
   },
 ];

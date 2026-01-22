@@ -1,5 +1,6 @@
-import { Component, Input, OnInit, ElementRef, ViewChild } from '@angular/core';
+import { Component, Input, OnInit, ElementRef, ViewChild, inject } from '@angular/core';
 import { CommonModule, NgTemplateOutlet } from '@angular/common';
+import { Router } from '@angular/router';
 import { TmdbService } from '../../services/tmdb.service';
 import { Movie } from '../../models/tmdb.model';
 
@@ -23,7 +24,11 @@ export class MovieRowComponent implements OnInit {
   isLoading: boolean = false;
   totalPages: number = 1;
 
-  constructor(private tmdbService: TmdbService) {}
+  constructor() {}
+
+
+  private tmdbService: TmdbService = inject(TmdbService);
+  private router: Router = inject(Router);
 
   ngOnInit() {
     this.loadMovies();
@@ -31,6 +36,10 @@ export class MovieRowComponent implements OnInit {
 
   getPoster(path: string | null): string {
     return this.tmdbService.getPosterUrl(path);
+  }
+
+  navigateToDetail(movieId: number): void {
+    this.router.navigate(['/movie', movieId]);
   }
 
   loadMovies() {
