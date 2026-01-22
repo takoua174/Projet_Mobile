@@ -1,17 +1,22 @@
 <!-- Loading State -->
-<div class="loading-container" *ngIf="loading()">
+@if (loading()) {
+<div class="loading-container">
   <div class="spinner"></div>
   <p>Loading movie details...</p>
 </div>
+}
 
 <!-- Error State -->
-<div class="error-container" *ngIf="error() && !loading()">
+@if (error() && !loading()) {
+<div class="error-container">
   <p class="error-message">{{ error() }}</p>
   <button class="retry-button" (click)="goBack()">Go Back</button>
 </div>
+}
 
 <!-- Movie Details -->
-<div class="movie-detail-container" *ngIf="!loading() && !error() && movieDetails() as movie">
+@if (!loading() && !error() && movieDetails(); as movie) {
+<div class="movie-detail-container">
   <div class="backdrop-header" [style.background-image]="'url(' + (movie.backdrop_path | tmdbImage:'backdrop') + ')'">
     <div class="backdrop-overlay">
       <div class="header-content">
@@ -33,11 +38,15 @@
         <div class="metadata">
           <span class="rating rating-good">★ {{ movie.vote_average * 10 | number:'1.0-0' }}%</span>
           <span>{{ movie.release_date | date:'mediumDate' }}</span>
-          <span *ngIf="movie.runtime">{{ movie.runtime }} min</span>
+          @if (movie.runtime) {
+          <span>{{ movie.runtime }} min</span>
+          }
         </div>
 
         <div class="genres">
-          <span class="genre-tag" *ngFor="let g of movie.genres">{{ g.name }}</span>
+          @for (g of movie.genres; track g.id) {
+          <span class="genre-tag">{{ g.name }}</span>
+          }
         </div>
 
         <div class="overview-section">
@@ -46,14 +55,18 @@
         </div>
 
         <div class="key-crew">
-          <div class="crew-item" *ngIf="director()">
+          @if (director()) {
+          <div class="crew-item">
             <span class="crew-role">Director</span>
             <span class="crew-name">{{ director()?.name }}</span>
           </div>
-          <div class="crew-item" *ngIf="writers()">
+          }
+          @if (writers()) {
+          <div class="crew-item">
             <span class="crew-role">Writers</span>
             <span class="crew-name">{{ writers() }}</span>
           </div>
+          }
         </div>
       </div>
     </div>
@@ -66,5 +79,8 @@
     
     </div>
 </div>
+}
 
-<app-youtube-player *ngIf="selectedVideo()" [videoKey]="selectedVideo()?.key!" (close)="selectedVideo.set(null)"></app-youtube-player>
+@if (selectedVideo()) {
+<app-youtube-player [videoKey]="selectedVideo()?.key!" (close)="selectedVideo.set(null)"></app-youtube-player>
+}
