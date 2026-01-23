@@ -1,9 +1,11 @@
-import { Component, Input, Output, EventEmitter, signal } from '@angular/core';
+import { Component, Input, Output, EventEmitter, signal, OnInit, OnChanges, SimpleChanges, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ReviewService, CreateReviewRequest } from '../../services/review.service';
 import { AuthService } from '../../services/auth.service';
+import { toObservable, takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { debounceTime } from 'rxjs/operators';
 
 @Component({
   selector: 'app-create-review',
@@ -12,7 +14,8 @@ import { AuthService } from '../../services/auth.service';
   templateUrl: './create-review.component.html',
   styleUrl: './create-review.component.css',
 })
-export class CreateReviewComponent {
+export class CreateReviewComponent implements OnInit 
+{
   @Input() movieId!: string;
   @Input() movieTitle!: string;
   @Output() reviewCreated = new EventEmitter<void>();
@@ -23,10 +26,22 @@ export class CreateReviewComponent {
   error = signal<string | null>(null);
   success = signal(false);
 
-  constructor(
-    private reviewService: ReviewService,
-    private authService: AuthService
-  ) {}
+  private  reviewService : ReviewService = inject(ReviewService);
+  private authService : AuthService = inject(AuthService);
+  constructor() 
+  {
+    toObservable(this.content)
+      .pipe(
+        debounceTime(500),
+        takeUntilDestroyed()
+      )
+      .subscribe((value) => {
+        if (this.movieId) {
+          localStorage.setItem(this.movieId, value);
+        }
+      });
+    
+  }
 
   get currentUser() {
     return this.authService.currentUserSignal();
@@ -35,6 +50,15 @@ export class CreateReviewComponent {
   get isAuthenticated() {
     return this.authService.isAuthenticated();
   }
+
+  ngOnInit(): void {
+      const savedReview = localStorage.getItem(this.movieId);
+      if (savedReview) {
+        this.content.set(savedReview);
+      }
+  }
+
+
 
   setRating(rating: number): void {
     this.rating.set(rating);
@@ -77,6 +101,7 @@ export class CreateReviewComponent {
         this.content.set('');
         this.rating.set(null);
         this.submitting.set(false);
+        localStorage.removeItem(this.movieId);
         this.reviewCreated.emit();
         
         // Reset success message after 3 seconds

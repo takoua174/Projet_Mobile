@@ -1,3 +1,12 @@
+<!-- Loading State -->
+@if (loading()) {
+<div class="loading-container">
+  <div class="spinner"></div>
+  <p>Loading movie details...</p>
+</div>
+}
+
+
 @if (!loading() && tvDetails(); as tv) {
 <div class="tv-detail-container">
   <div class="backdrop-header" [style.background-image]="'url(' + (tv.backdrop_path | tmdbImage:'backdrop') + ')'">
