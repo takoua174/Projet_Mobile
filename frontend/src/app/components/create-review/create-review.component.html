@@ -46,9 +46,9 @@
 
         <div class="form-group">
             <label for="review-content">Your Review *</label>
-            <textarea id="review-content" class="review-textarea" [value]="content()"
-                (input)="content.set($any($event.target).value)" placeholder="What did you think about this movie?"
-                required [disabled]="submitting()"></textarea>
+            <textarea id="review-content" class="review-textarea" [value]="content()" #reviewContent
+                (input)="content.set(reviewContent.value)" placeholder="What did you think about this movie?" required
+                [disabled]="submitting()"></textarea>
         </div>
 
         <div class="form-actions">
