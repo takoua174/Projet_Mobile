@@ -1,4 +1,13 @@
-import { Component, OnInit, signal, ElementRef, ViewChild, HostListener, DestroyRef, inject } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  signal,
+  ElementRef,
+  ViewChild,
+  HostListener,
+  DestroyRef,
+  inject,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -35,7 +44,7 @@ export class SearchBarComponent implements OnInit {
         debounceTime(300),
         distinctUntilChanged(),
         tap(() => this.isSearching.set(true)),
-        switchMap(query => {
+        switchMap((query) => {
           const term = query?.trim() || '';
           if (term.length < 2) {
             this.resetSearchState();
@@ -43,7 +52,7 @@ export class SearchBarComponent implements OnInit {
           }
           return this.tmdbService.searchMovies(term, 1);
         }),
-        takeUntilDestroyed(this.destroyRef)
+        takeUntilDestroyed(this.destroyRef),
       )
       .subscribe({
         next: (response) => {
@@ -54,7 +63,7 @@ export class SearchBarComponent implements OnInit {
         error: (err) => {
           console.error('Search error:', err);
           this.isSearching.set(false);
-        }
+        },
       });
   }
 
@@ -65,7 +74,7 @@ export class SearchBarComponent implements OnInit {
   }
 
   toggleSearch(): void {
-    this.isExpanded.update(v => !v);
+    this.isExpanded.update((v) => !v);
     if (this.isExpanded()) {
       setTimeout(() => this.searchInput?.nativeElement.focus(), 100);
     } else {
@@ -76,6 +85,23 @@ export class SearchBarComponent implements OnInit {
   selectMovie(movie: Movie): void {
     this.router.navigate(['/movie', movie.id]);
     this.clearSearch();
+  }
+
+  viewAllResults(): void {
+    const query = this.searchControl.value?.trim();
+    if (query) {
+      this.router.navigate(['/search'], { queryParams: { q: query } });
+      this.clearSearch();
+    }
+  }
+
+  onEnterKey(event: Event): void {
+    event.preventDefault();
+    const query = this.searchControl.value?.trim();
+    if (query && query.length >= 2) {
+      this.router.navigate(['/search'], { queryParams: { q: query } });
+      this.clearSearch();
+    }
   }
 
   clearSearch(): void {
