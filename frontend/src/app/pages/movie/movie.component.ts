@@ -6,7 +6,7 @@ import { HeroBannerComponent } from "../../components/hero-banner/hero-banner";
 import { ContentRowComponent } from '../../components/content-row/content-row';
 import { NavbarComponent } from '../../shared-componants/navbar/navbar';
 import { FETCH_TYPE } from '../../constants/fetch-type.const';
-import { map, switchMap, timer } from 'rxjs';
+import { map, switchMap, timer, zip } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { TMDB_GENRES } from '../../constants/tmdb-genre.const';
 
@@ -26,8 +26,11 @@ export class MovieComponent {
   constructor() { }
   private tmdbService: TmdbService = inject(TmdbService);
 
-  bannerMovie$ = this.tmdbService.getTrendingMovies().pipe(
-    map(response => response.results), 
+  bannerMovie$ = zip(
+      this.tmdbService.getTrendingMovies(),
+      timer(1000))
+    .pipe(
+    map(([response,time]) => response.results), 
     map(movies => movies[Math.floor(Math.random() * movies.length)])
   )
   bannerMovie = toSignal(this.bannerMovie$, { initialValue: null });

@@ -6,7 +6,7 @@ import { HeroBannerComponent } from "../../components/hero-banner/hero-banner";
 import { ContentRowComponent } from '../../components/content-row/content-row';
 import { NavbarComponent } from '../../shared-componants/navbar/navbar';
 import { FETCH_TYPE } from '../../constants/fetch-type.const';
-import { map } from 'rxjs';
+import { map, timer, zip } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { TMDB_GENRES } from '../../constants/tmdb-genre.const';
 
@@ -24,8 +24,11 @@ export class TvShowComponent {
 
   private tmdbService: TmdbService = inject(TmdbService);
 
-  bannerTvShow$ = this.tmdbService.getTrendingTVShows().pipe(
-    map(response => response.results), 
+  bannerTvShow$ = zip(
+      this.tmdbService.getTrendingTVShows(),
+      timer(1000))
+    .pipe(
+    map(([response,_]) => response.results), 
     map(tvShows => tvShows[Math.floor(Math.random() * tvShows.length)])
   );
 
