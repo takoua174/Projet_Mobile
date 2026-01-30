@@ -30,7 +30,11 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/tv-show/tv-show.component').then((m) => m.TvShowComponent),
     canActivate: [authGuard],
   },
-
+  {
+    path: 'genre/:type/:id',
+    loadComponent: () => import('./pages/genre-content/genre-content.component').then(m => m.GenreContentComponent),
+    canActivate: [authGuard]
+  },
   {
     path: 'movie/:id',
     loadComponent: () =>
