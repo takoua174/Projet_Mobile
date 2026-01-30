@@ -89,7 +89,7 @@ export class CreateReviewComponent implements OnInit
       author_details: {
         name: this .currentUser.username,
         username: this.currentUser.username,
-        avatar_path: null,
+        profile_image: this.currentUser.profilePicture,
         rating: this.rating(),
       },
       content: this.content(),

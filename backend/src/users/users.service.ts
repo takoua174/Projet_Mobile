@@ -3,10 +3,13 @@ import {
   ConflictException,
   NotFoundException,
   BadRequestException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
+import { ReviewsService } from '../reviews/reviews.service';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -14,6 +17,8 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
+    @Inject(forwardRef(() => ReviewsService))
+    private reviewsService: ReviewsService,
   ) {}
 
   async create(userData: {
@@ -94,12 +99,22 @@ export class UsersService {
       }
     }
 
+    const oldUsername = user.username;
+
     // Update fields
     if (updateData.username) user.username = updateData.username;
     if (updateData.profilePicture !== undefined)
       user.profilePicture = updateData.profilePicture;
 
     const updatedUser = await this.usersRepository.save(user);
+
+    // Sync with reviews
+    await this.reviewsService.updateAuthorProfile(
+      oldUsername,
+      updatedUser.username,
+      updatedUser.profilePicture || null,
+    );
+
     return updatedUser;
   }
 
