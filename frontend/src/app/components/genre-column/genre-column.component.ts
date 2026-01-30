@@ -5,6 +5,7 @@ import { Genre } from '../../models/tmdb.model';
 import { CONTENT_TYPE } from '../../constants/content-type.const';
 import { Router } from '@angular/router';
 import { ROUTES } from '../../constants/route.const';
+import { ContentType } from '../../types/content-type.type';
 
 @Component({
   selector: 'app-genre-column',
@@ -22,6 +23,7 @@ export class GenreColumnComponent {
 
     title = input.required<string>(); 
     genres = input.required<Genre[]>();
+    contentType = input.required<ContentType>(); 
 
     onclick() {
         if (this.title() === this.contentTypes.MOVIE) {

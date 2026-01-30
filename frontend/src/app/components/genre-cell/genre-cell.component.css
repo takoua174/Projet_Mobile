@@ -8,6 +8,8 @@
   transition: transform 0.2s, background-color 0.2s, border-color 0.2s;
   font-weight: 500;
   border: 1px solid rgba(255, 255, 255, 0.1);
+  display: block; /* For anchor tag */
+  text-decoration: none;
 }
 
 .genre-cell:hover {

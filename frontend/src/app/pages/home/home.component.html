@@ -3,13 +3,13 @@
 <div class="home-container">
   <!-- Movie Column -->
   <div class="column movie-column">
-    <app-genre-column [title]="contentTypes.MOVIE" [genres]="movieGenres()">
+    <app-genre-column [title]="contentTypes.MOVIE" [genres]="movieGenres()" [contentType]="contentTypes.MOVIE">
     </app-genre-column>
   </div>
 
   <!-- TV Show Column -->
   <div class="column tv-column">
-    <app-genre-column [title]="contentTypes.TV" [genres]="tvGenres()">
+    <app-genre-column [title]="contentTypes.TV" [genres]="tvGenres()" [contentType]="contentTypes.TV">
     </app-genre-column>
   </div>
 </div>

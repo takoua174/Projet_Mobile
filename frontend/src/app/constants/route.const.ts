@@ -4,6 +4,7 @@ export const ROUTES = {
     HOME: '',
     MOVIE: 'movie',
     TV: 'tv',
+    GENRE: 'genre',
     PROFILE: 'profile',
     FAVORITES: 'favorites',
     NOT_FOUND: '**',
