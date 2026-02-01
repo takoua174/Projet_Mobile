@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'config/app_theme.dart';
 import 'providers/auth_provider.dart';
 import 'services/api_service.dart';
+import 'services/tmdb_service.dart'; // Import TMDB service
+import 'package:dio/dio.dart'; // Import Dio
 import 'pages/auth/login_page.dart';
 import 'pages/auth/register_page.dart';
 import 'pages/profile/profile_page.dart';
@@ -21,6 +23,9 @@ class MyApp extends StatelessWidget {
       providers: [
         Provider<ApiService>(
           create: (_) => ApiService(),
+        ),
+         Provider<TmdbService>( // Add TmdbService provider
+          create: (_) => TmdbService(Dio()), // Ideally share the Dio instance or config
         ),
         ChangeNotifierProvider<AuthProvider>(
           create: (context) => AuthProvider(
@@ -60,6 +65,20 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _checkAuth() async {
+
+
+    // ============================================================================
+    /*
+    // For testing without backend, skip auth check and go straight to home
+    await Future.delayed(const Duration(seconds: 1));
+    if (!mounted) return;
+    Navigator.of(context).pushReplacementNamed('/home');
+    */
+    // ============================================================================
+
+
+
+    // Original Auth Logic
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final apiService = Provider.of<ApiService>(context, listen: false);
 
@@ -86,6 +105,7 @@ class _SplashScreenState extends State<SplashScreen> {
         Navigator.of(context).pushReplacementNamed('/login');
       }
     }
+
   }
 
   @override
