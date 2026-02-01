@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../config/app_theme.dart';
+import '../details/movie_detail_page.dart';  // Import MovieDetailPage
+import '../details/tv_detail_page.dart';     // Import TvDetailPage
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -26,6 +28,29 @@ class HomePage extends StatelessWidget {
           ),
         ),
         actions: [
+          // Add temporary buttons to navigate to existing details pages
+           IconButton(
+            icon: const Icon(Icons.movie),
+            tooltip: "Test Movie Details",
+            onPressed: () {
+               // Navigate to a test movie (e.g., Fight Club id 550)
+               Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const MovieDetailPage(id: 550))
+              );
+            },
+          ),
+           IconButton(
+            icon: const Icon(Icons.tv),
+            tooltip: "Test TV Details",
+            onPressed: () {
+               // Navigate to a test TV show (e.g., Breaking Bad id 1396)
+               Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const TvDetailPage(id: 1396))
+              );
+            },
+          ),
           Consumer<AuthProvider>(
             builder: (context, authProvider, child) {
               final user = authProvider.currentUser;
