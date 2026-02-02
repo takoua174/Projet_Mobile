@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:email_validator/email_validator.dart';
 import '../../providers/auth_provider.dart';
 import '../../config/app_theme.dart';
 
-class LoginPage extends StatefulWidget {
+class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  ConsumerState<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage>
+class _LoginPageState extends ConsumerState<LoginPage>
     with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
@@ -47,7 +47,7 @@ class _LoginPageState extends State<LoginPage>
       return;
     }
 
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final authProvider = ref.read(authChangeNotifierProvider);
     final success = await authProvider.login(
       _emailController.text.trim(),
       _passwordController.text,
@@ -183,28 +183,25 @@ class _LoginPageState extends State<LoginPage>
   }
 
   Widget _buildForm() {
-    return Consumer<AuthProvider>(
-      builder: (context, authProvider, child) {
-        return Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (authProvider.error != null) ...[
-                _buildErrorAlert(authProvider.error!),
-                const SizedBox(height: 16),
-              ],
-              _buildEmailField(),
-              const SizedBox(height: 24),
-              _buildPasswordField(),
-              const SizedBox(height: 32),
-              _buildLoginButton(authProvider.isLoading),
-              const SizedBox(height: 24),
-              _buildRegisterLink(),
-            ],
-          ),
-        );
-      },
+    final authProvider = ref.watch(authChangeNotifierProvider);
+    return Form(
+      key: _formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (authProvider.error != null) ...[
+            _buildErrorAlert(authProvider.error!),
+            const SizedBox(height: 16),
+          ],
+          _buildEmailField(),
+          const SizedBox(height: 24),
+          _buildPasswordField(),
+          const SizedBox(height: 32),
+          _buildLoginButton(authProvider.isLoading),
+          const SizedBox(height: 24),
+          _buildRegisterLink(),
+        ],
+      ),
     );
   }
 

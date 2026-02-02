@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' as riverpod;
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:intl/intl.dart';
+import 'package:intl/intl.dart' hide TextDirection;
 import 'dart:convert';
 import '../../models/tmdb_models.dart';
 import '../../services/tmdb_service.dart';
@@ -372,11 +372,14 @@ class _MovieDetailScaffold extends riverpod.ConsumerWidget {
                     children: [
                       Row(
                         children: [
-                          Text(
-                            review['author'] ?? 'Anonymous',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
+                          Flexible(
+                            child: Text(
+                              review['author'] ?? 'Anonymous',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -410,6 +413,7 @@ class _MovieDetailScaffold extends riverpod.ConsumerWidget {
                     ],
                   ),
                 ),
+                const SizedBox(width: 8),
                 if (review['author_details']?['rating'] != null)
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -440,13 +444,9 @@ class _MovieDetailScaffold extends riverpod.ConsumerWidget {
               ],
             ),
             const SizedBox(height: 12),
-            Text(
-              review['content'] ?? '',
-              style: TextStyle(
-                color: Colors.white.withOpacity(0.9),
-                fontSize: 14,
-                height: 1.5,
-              ),
+            _ExpandableText(
+              text: review['content'] ?? '',
+              maxLines: 5,
             ),
           ],
         ),
@@ -617,13 +617,9 @@ class _MovieDetailScaffold extends riverpod.ConsumerWidget {
               ],
             ),
             const SizedBox(height: 12),
-            Text(
-              review.content,
-              style: TextStyle(
-                color: Colors.white.withOpacity(0.9),
-                fontSize: 14,
-                height: 1.5,
-              ),
+            _ExpandableText(
+              text: review.content,
+              maxLines: 5,
             ),
           ],
         ),
@@ -732,6 +728,94 @@ class _MovieDetailScaffold extends riverpod.ConsumerWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _ExpandableText extends StatefulWidget {
+  final String text;
+  final int maxLines;
+
+  const _ExpandableText({
+    required this.text,
+    this.maxLines = 5,
+  });
+
+  @override
+  State<_ExpandableText> createState() => _ExpandableTextState();
+}
+
+class _ExpandableTextState extends State<_ExpandableText> {
+  bool _isExpanded = false;
+  bool _hasOverflow = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Check if text overflows
+        final textSpan = TextSpan(
+          text: widget.text,
+          style: TextStyle(
+            color: Colors.white.withOpacity(0.9),
+            fontSize: 14,
+            height: 1.5,
+          ),
+        );
+        
+        final textPainter = TextPainter(
+          text: textSpan,
+          maxLines: widget.maxLines,
+          textDirection: TextDirection.ltr,
+        );
+        
+        textPainter.layout(maxWidth: constraints.maxWidth);
+        _hasOverflow = textPainter.didExceedMaxLines;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              widget.text,
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.9),
+                fontSize: 14,
+                height: 1.5,
+              ),
+              maxLines: _isExpanded ? null : widget.maxLines,
+              overflow: _isExpanded ? TextOverflow.visible : TextOverflow.ellipsis,
+            ),
+            if (_hasOverflow) ...[
+              const SizedBox(height: 8),
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _isExpanded = !_isExpanded;
+                  });
+                },
+                child: Row(
+                  children: [
+                    Text(
+                      _isExpanded ? 'Show less' : 'Read more',
+                      style: const TextStyle(
+                        color: Color(0xFF667eea),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(
+                      _isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                      color: const Color(0xFF667eea),
+                      size: 18,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        );
+      },
     );
   }
 }

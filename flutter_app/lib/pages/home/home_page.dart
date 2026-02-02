@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/auth_provider.dart';
 import '../../config/app_theme.dart';
 import '../details/movie_detail_page.dart';  // Import MovieDetailPage
 import '../details/tv_detail_page.dart';     // Import TvDetailPage
 
-class HomePage extends StatelessWidget {
+class HomePage extends ConsumerWidget {
   const HomePage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authProvider = ref.watch(authChangeNotifierProvider);
+    final user = authProvider.currentUser;
+    
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
@@ -51,27 +54,22 @@ class HomePage extends StatelessWidget {
               );
             },
           ),
-          Consumer<AuthProvider>(
-            builder: (context, authProvider, child) {
-              final user = authProvider.currentUser;
-              return IconButton(
-                icon: CircleAvatar(
-                  radius: 16,
-                  backgroundColor: AppTheme.primaryColor,
-                  child: user?.profilePicture != null
-                      ? null
-                      : const Icon(
-                          Icons.person,
-                          size: 18,
-                          color: Colors.white,
-                        ),
-                ),
-                onPressed: () {
-                  Navigator.of(context).pushNamed('/profile');
-                },
-                tooltip: 'Profile',
-              );
+          IconButton(
+            icon: CircleAvatar(
+              radius: 16,
+              backgroundColor: AppTheme.primaryColor,
+              child: user?.profilePicture != null
+                  ? null
+                  : const Icon(
+                      Icons.person,
+                      size: 18,
+                      color: Colors.white,
+                    ),
+            ),
+            onPressed: () {
+              Navigator.of(context).pushNamed('/profile');
             },
+            tooltip: 'Profile',
           ),
           const SizedBox(width: 8),
         ],
