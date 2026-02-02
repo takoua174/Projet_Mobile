@@ -163,12 +163,13 @@ class ApiService {
     }
   }
 
-  Future<void> toggleFavorite(int contentId, String type) async {
+  Future<bool> toggleFavorite(int contentId, String contentType) async {
     try {
-      await _dio.post('/users/favorites', data: {
+      final response = await _dio.post('/users/favorites/toggle', data: {
         'contentId': contentId,
-        'type': type,
+        'contentType': contentType,
       });
+      return response.data['isFavorite'] ?? false;
     } on DioException catch (e) {
       throw _handleError(e);
     }
@@ -181,6 +182,44 @@ class ApiService {
         queryParameters: {'username': username},
       );
       return response.data['available'] ?? false;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> createReview({
+    required String movieId,
+    required String author,
+    required Map<String, dynamic> authorDetails,
+    required String content,
+    String? url,
+  }) async {
+    try {
+      final response = await _dio.post('/reviews', data: {
+        'movie_id': movieId,
+        'author': author,
+        'author_details': authorDetails,
+        'content': content,
+        if (url != null) 'url': url,
+      });
+      return response.data;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<List<dynamic>> getReviewsByMovieId(String movieId) async {
+    try {
+      final response = await _dio.get('/reviews/movie/$movieId');
+      return response.data as List<dynamic>;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<void> deleteReview(String reviewId) async {
+    try {
+      await _dio.delete('/reviews/$reviewId');
     } on DioException catch (e) {
       throw _handleError(e);
     }

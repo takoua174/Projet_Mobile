@@ -1,42 +1,34 @@
+/// User model
+/// Migrated from Angular auth.model.ts
 class User {
   final String id;
   final String email;
   final String username;
   final String? profilePicture;
-  final List<int> favoriteMovies;
-  final List<int> favoriteTvShows;
-  final DateTime createdAt;
-  final DateTime updatedAt;
+  final List<int>? favoriteMovies;
+  final List<int>? favoriteTvShows;
 
-  User({
+  const User({
     required this.id,
     required this.email,
     required this.username,
     this.profilePicture,
-    this.favoriteMovies = const [],
-    this.favoriteTvShows = const [],
-    required this.createdAt,
-    required this.updatedAt,
+    this.favoriteMovies,
+    this.favoriteTvShows,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
-      id: json['id'] ?? json['_id'] ?? '',
-      email: json['email'] ?? '',
-      username: json['username'] ?? '',
-      profilePicture: json['profilePicture'],
-      favoriteMovies: json['favoriteMovies'] != null
-          ? List<int>.from(json['favoriteMovies'])
-          : [],
-      favoriteTvShows: json['favoriteTvShows'] != null
-          ? List<int>.from(json['favoriteTvShows'])
-          : [],
-      createdAt: json['createdAt'] != null
-          ? DateTime.parse(json['createdAt'])
-          : DateTime.now(),
-      updatedAt: json['updatedAt'] != null
-          ? DateTime.parse(json['updatedAt'])
-          : DateTime.now(),
+      id: json['id'] as String,
+      email: json['email'] as String,
+      username: json['username'] as String,
+      profilePicture: json['profilePicture'] as String?,
+      favoriteMovies: (json['favoriteMovies'] as List<dynamic>?)
+          ?.map((e) => e as int)
+          .toList(),
+      favoriteTvShows: (json['favoriteTvShows'] as List<dynamic>?)
+          ?.map((e) => e as int)
+          .toList(),
     );
   }
 
@@ -48,34 +40,52 @@ class User {
       'profilePicture': profilePicture,
       'favoriteMovies': favoriteMovies,
       'favoriteTvShows': favoriteTvShows,
-      'createdAt': createdAt.toIso8601String(),
-      'updatedAt': updatedAt.toIso8601String(),
     };
+  }
+
+  User copyWith({
+    String? id,
+    String? email,
+    String? username,
+    String? profilePicture,
+    List<int>? favoriteMovies,
+    List<int>? favoriteTvShows,
+  }) {
+    return User(
+      id: id ?? this.id,
+      email: email ?? this.email,
+      username: username ?? this.username,
+      profilePicture: profilePicture ?? this.profilePicture,
+      favoriteMovies: favoriteMovies ?? this.favoriteMovies,
+      favoriteTvShows: favoriteTvShows ?? this.favoriteTvShows,
+    );
   }
 }
 
+/// Auth response model
 class AuthResponse {
   final String accessToken;
   final User user;
 
-  AuthResponse({
+  const AuthResponse({
     required this.accessToken,
     required this.user,
   });
 
   factory AuthResponse.fromJson(Map<String, dynamic> json) {
     return AuthResponse(
-      accessToken: json['access_token'] ?? json['accessToken'] ?? '',
-      user: User.fromJson(json['user']),
+      accessToken: json['access_token'] as String,
+      user: User.fromJson(json['user'] as Map<String, dynamic>),
     );
   }
 }
 
+/// Login request model
 class LoginRequest {
   final String email;
   final String password;
 
-  LoginRequest({
+  const LoginRequest({
     required this.email,
     required this.password,
   });
@@ -88,12 +98,13 @@ class LoginRequest {
   }
 }
 
+/// Register request model
 class RegisterRequest {
   final String email;
   final String username;
   final String password;
 
-  RegisterRequest({
+  const RegisterRequest({
     required this.email,
     required this.username,
     required this.password,
@@ -108,28 +119,30 @@ class RegisterRequest {
   }
 }
 
+/// Update profile request model
 class UpdateProfileRequest {
   final String? username;
   final String? profilePicture;
 
-  UpdateProfileRequest({
+  const UpdateProfileRequest({
     this.username,
     this.profilePicture,
   });
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = {};
-    if (username != null) data['username'] = username;
-    if (profilePicture != null) data['profilePicture'] = profilePicture;
-    return data;
+    return {
+      if (username != null) 'username': username,
+      if (profilePicture != null) 'profilePicture': profilePicture,
+    };
   }
 }
 
+/// Update password request model
 class UpdatePasswordRequest {
   final String currentPassword;
   final String newPassword;
 
-  UpdatePasswordRequest({
+  const UpdatePasswordRequest({
     required this.currentPassword,
     required this.newPassword,
   });
@@ -142,37 +155,20 @@ class UpdatePasswordRequest {
   }
 }
 
+/// Favorites response model
 class FavoritesResponse {
   final List<int> movies;
   final List<int> tvShows;
 
-  FavoritesResponse({
+  const FavoritesResponse({
     required this.movies,
     required this.tvShows,
   });
 
   factory FavoritesResponse.fromJson(Map<String, dynamic> json) {
     return FavoritesResponse(
-      movies: _parseIds(json['movies']),
-      tvShows: _parseIds(json['tvShows']),
+      movies: (json['movies'] as List<dynamic>).map((e) => e as int).toList(),
+      tvShows: (json['tvShows'] as List<dynamic>).map((e) => e as int).toList(),
     );
-  }
-
-  static List<int> _parseIds(dynamic data) {
-    if (data == null) return [];
-    
-    if (data is List) {
-      return data.map((item) {
-        if (item is int) {
-          return item;
-        } else if (item is Map) {
-          // If it's a map, try to extract 'id' field
-          return item['id'] as int? ?? 0;
-        }
-        return 0;
-      }).where((id) => id != 0).toList();
-    }
-    
-    return [];
   }
 }

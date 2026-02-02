@@ -47,11 +47,11 @@ class AppTheme {
           bodySmall: TextStyle(color: textTertiary),
         ),
       ),
-      cardTheme: CardTheme(
+      cardTheme: const CardThemeData(
         color: cardColor,
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.all(Radius.circular(24)),
           side: BorderSide(color: borderColor, width: 1),
         ),
       ),
@@ -115,7 +115,7 @@ class AppTheme {
       end: Alignment.bottomRight,
       colors: [
         backgroundColor,
-        backgroundColor.withOpacity(0.8),
+        backgroundColor.withValues(alpha: 0.8),
       ],
     );
   }

@@ -1,9 +1,17 @@
+import 'package:flutter/foundation.dart';
+
 class AppConfig {
-  static const String apiBaseUrl = 'http://localhost:3000';
+  static String get apiBaseUrl {
+    if (kIsWeb) {
+      return 'http://localhost:3000';
+    } else {
+      return 'http://10.0.2.2:3000';
+    }
+  }
 
   // API Endpoints
-  static const String authEndpoint = '$apiBaseUrl/auth';
-  static const String usersEndpoint = '$apiBaseUrl/users';
+  static String get authEndpoint => '$apiBaseUrl/auth';
+  static String get usersEndpoint => '$apiBaseUrl/users';
 
   // Storage Keys
   static const String tokenKey = 'access_token';

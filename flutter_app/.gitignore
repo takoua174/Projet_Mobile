@@ -60,5 +60,11 @@ app.*.map.json
 # Coverage
 coverage/
 
+# Migration and testing documentation
+MIGRATION_HOME_REPORT.md
+MIGRATION_MOVIE_REPORT.md
+TESTING_GUIDE.md
+TESTING_MOVIE_PAGE.md
+
 # Exceptions to above rules.
 !/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
