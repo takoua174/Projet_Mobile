@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
-import '../../../models/tmdb_models.dart';
-import '../../../services/tmdb_service.dart';
-import '../../../providers/tv_detail_provider.dart';
-import '../../../config/app_config.dart';
+import '../../models/tmdb_models.dart';
+import '../../services/tmdb_service.dart';
+import '../../providers/tv_detail_provider.dart';
+import '../../config/environment.dart';
 import 'widgets/widgets.dart';
 
 class TvDetailPage extends StatelessWidget {

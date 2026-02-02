@@ -14,11 +14,38 @@ import '../../widgets/genre/genre_column_widget.dart';
 /// Dependencies:
 /// - NavbarWidget ✅ CONVERTED
 /// - GenreColumnWidget ✅ CONVERTED
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    // Add minimum 1 second delay for smooth loading experience
+    await Future.delayed(const Duration(seconds: 1));
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return _buildLoader();
+    }
+
     // Watch genres
     final movieGenresAsync = ref.watch(movieGenresProvider);
     final tvGenresAsync = ref.watch(tvGenresProvider);
@@ -38,6 +65,52 @@ class HomeScreen extends ConsumerWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  /// Loading screen with spinner and fade animation
+  Widget _buildLoader() {
+    return Scaffold(
+      backgroundColor: const Color(0xFF141414),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(
+              width: 50,
+              height: 50,
+              child: CircularProgressIndicator(
+                strokeWidth: 4,
+                valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFDC2626)),
+                backgroundColor: Colors.white.withOpacity(0.1),
+              ),
+            ),
+            const SizedBox(height: 24),
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0.5, end: 1.0),
+              duration: const Duration(milliseconds: 1500),
+              curve: Curves.easeInOut,
+              builder: (context, value, child) {
+                return Opacity(
+                  opacity: value,
+                  child: child,
+                );
+              },
+              onEnd: () {
+                if (mounted) setState(() {});
+              },
+              child: const Text(
+                'Loading Home page ...',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  letterSpacing: 1,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

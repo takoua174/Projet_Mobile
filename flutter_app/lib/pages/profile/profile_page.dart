@@ -2,20 +2,22 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' as riverpod;
 import 'package:image_picker/image_picker.dart';
 import '../../providers/auth_provider.dart';
 import '../../config/app_theme.dart';
 import '../../services/api_service.dart';
 import '../../models/auth_model.dart';
+import '../../widgets/navbar/navbar_widget.dart';
 
-class ProfilePage extends StatefulWidget {
+class ProfilePage extends riverpod.ConsumerStatefulWidget {
   const ProfilePage({super.key});
 
   @override
-  State<ProfilePage> createState() => _ProfilePageState();
+  riverpod.ConsumerState<ProfilePage> createState() => _ProfilePageState();
 }
 
-class _ProfilePageState extends State<ProfilePage>
+class _ProfilePageState extends riverpod.ConsumerState<ProfilePage>
     with TickerProviderStateMixin {
   final _profileFormKey = GlobalKey<FormState>();
   final _passwordFormKey = GlobalKey<FormState>();
@@ -53,7 +55,7 @@ class _ProfilePageState extends State<ProfilePage>
   }
 
   void _loadProfile() {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final authProvider = ref.read(authChangeNotifierProvider);
     final user = authProvider.currentUser;
     if (user != null) {
       _usernameController.text = user.username;
@@ -112,7 +114,7 @@ class _ProfilePageState extends State<ProfilePage>
       return;
     }
 
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final authProvider = ref.read(authChangeNotifierProvider);
     final success = await authProvider.updateProfile(
       username: _usernameController.text.trim(),
       profilePicture: _profilePicture,
@@ -130,7 +132,7 @@ class _ProfilePageState extends State<ProfilePage>
       return;
     }
 
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final authProvider = ref.read(authChangeNotifierProvider);
     final success = await authProvider.updatePassword(
       _currentPasswordController.text,
       _newPasswordController.text,
@@ -171,7 +173,7 @@ class _ProfilePageState extends State<ProfilePage>
   }
 
   Future<void> _logout() async {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final authProvider = ref.read(authChangeNotifierProvider);
     await authProvider.logout();
     if (mounted) {
       Navigator.of(context).pushReplacementNamed('/login');
@@ -182,68 +184,91 @@ class _ProfilePageState extends State<ProfilePage>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
-      appBar: AppBar(
-        backgroundColor: AppTheme.backgroundColor,
-        elevation: 0,
-        title: ShaderMask(
-          shaderCallback: (bounds) =>
-              AppTheme.primaryGradient.createShader(bounds),
-          child: const Text(
-            'My Profile',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-            ),
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout, color: AppTheme.primaryColor),
-            onPressed: _logout,
-            tooltip: 'Logout',
+      body: Column(
+        children: [
+          const NavbarWidget(),
+          Expanded(
+            child: _buildProfileContent(),
           ),
         ],
       ),
-      body: Consumer<AuthProvider>(
-        builder: (context, authProvider, child) {
-          if (authProvider.currentUser == null) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          }
+    );
+  }
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              children: [
-                if (_successMessage != null) ...[
-                  _buildSuccessAlert(_successMessage!),
-                  const SizedBox(height: 16),
-                ],
-                if (_errorMessage != null) ...[
-                  _buildErrorAlert(_errorMessage!),
-                  const SizedBox(height: 16),
-                ],
-                _buildProfileHeader(authProvider.currentUser!),
-                const SizedBox(height: 32),
-                _buildTabBar(),
-                const SizedBox(height: 24),
-                SizedBox(
-                  height: 600,
-                  child: TabBarView(
-                    controller: _tabController,
-                    children: [
-                      _buildProfileTab(authProvider.isLoading),
-                      _buildPasswordTab(authProvider.isLoading),
-                    ],
-                  ),
-                ),
-              ],
+  Widget _buildProfileContent() {
+    return CustomScrollView(
+      slivers: [
+        SliverAppBar(
+          backgroundColor: AppTheme.backgroundColor,
+          elevation: 0,
+          pinned: false,
+          floating: true,
+          automaticallyImplyLeading: false,
+          title: ShaderMask(
+            shaderCallback: (bounds) =>
+                AppTheme.primaryGradient.createShader(bounds),
+            child: const Text(
+              'My Profile',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+              ),
             ),
-          );
-        },
-      ),
+          ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.logout, color: AppTheme.primaryColor),
+              onPressed: _logout,
+              tooltip: 'Logout',
+            ),
+          ],
+        ),
+        SliverToBoxAdapter(
+          child: Consumer<AuthProvider>(
+            builder: (context, authProvider, child) {
+              if (authProvider.currentUser == null) {
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(100),
+                    child: CircularProgressIndicator(),
+                  ),
+                );
+              }
+
+              return SingleChildScrollView(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  children: [
+                    if (_successMessage != null) ...[
+                      _buildSuccessAlert(_successMessage!),
+                      const SizedBox(height: 16),
+                    ],
+                    if (_errorMessage != null) ...[
+                      _buildErrorAlert(_errorMessage!),
+                      const SizedBox(height: 16),
+                    ],
+                    _buildProfileHeader(authProvider.currentUser!),
+                    const SizedBox(height: 32),
+                    _buildTabBar(),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      height: 600,
+                      child: TabBarView(
+                        controller: _tabController,
+                        children: [
+                          _buildProfileTab(authProvider.isLoading),
+                          _buildPasswordTab(authProvider.isLoading),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 

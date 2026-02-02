@@ -11,6 +11,10 @@ import 'pages/auth/register_page.dart';
 import 'pages/profile/profile_page.dart';
 import 'pages/home/home_page.dart';
 import 'pages/home/home_screen.dart'; // New migrated home screen
+import 'pages/movie/movie_page.dart'; // Movie browse page
+import 'pages/tv/tv_page.dart'; // TV browse page
+import 'pages/details/movie_detail_page.dart'; // Movie detail page
+import 'pages/details/tv_detail_page.dart'; // TV detail page
 
 void main() {
   runApp(
@@ -48,9 +52,32 @@ class MyApp extends StatelessWidget {
           '/splash': (context) => const SplashScreen(),
           '/login': (context) => const LoginPage(),
           '/register': (context) => const RegisterPage(),
-          '/home': (context) => const HomePage(),
-          '/home-new': (context) => const HomeScreen(), // New migrated screen for testing
+          '/home': (context) => const HomeScreen(), // Use migrated home
+          '/home-old': (context) => const HomePage(), // Keep old home for reference
+          '/movie': (context) => const MoviePage(), // Movie browse page
+          '/tv': (context) => const TVPage(), // TV browse page
           '/profile': (context) => const ProfilePage(),
+        },
+        onGenerateRoute: (settings) {
+          // Handle movie detail routes: /movie/:id
+          if (settings.name != null && settings.name!.startsWith('/movie/')) {
+            final id = int.tryParse(settings.name!.split('/').last);
+            if (id != null) {
+              return MaterialPageRoute(
+                builder: (context) => MovieDetailPage(id: id),
+              );
+            }
+          }
+          // Handle TV detail routes: /tv/:id
+          if (settings.name != null && settings.name!.startsWith('/tv/')) {
+            final id = int.tryParse(settings.name!.split('/').last);
+            if (id != null) {
+              return MaterialPageRoute(
+                builder: (context) => TvDetailPage(id: id),
+              );
+            }
+          }
+          return null;
         },
       ),
     );

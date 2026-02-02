@@ -124,6 +124,36 @@ class HomePage extends StatelessWidget {
               const SizedBox(height: 16),
               ElevatedButton.icon(
                 onPressed: () {
+                  Navigator.of(context).pushNamed('/movie');
+                },
+                icon: const Icon(Icons.movie_filter),
+                label: const Text('Test Movie Browse Page'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFDC2626),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 16,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.of(context).pushNamed('/tv');
+                },
+                icon: const Icon(Icons.live_tv),
+                label: const Text('Test TV Browse Page'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF8B5CF6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 16,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: () {
                   Navigator.of(context).pushNamed('/profile');
                 },
                 icon: const Icon(Icons.person),

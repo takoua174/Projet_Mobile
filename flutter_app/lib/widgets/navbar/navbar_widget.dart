@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' as riverpod;
+import 'dart:convert';
 import '../../providers/auth_provider.dart';
-import '../../config/routes.dart';
 
 /// Navbar Widget - Top navigation bar with menu items and logout
 /// 
@@ -11,41 +11,23 @@ import '../../config/routes.dart';
 /// - Scroll-based background color change
 /// - Active route highlighting
 /// - Logout button with icon
-/// 
-/// Dependencies:
-/// - SearchBarWidget (MISSING - child component)
-class NavbarWidget extends ConsumerStatefulWidget {
+class NavbarWidget extends riverpod.ConsumerStatefulWidget {
   const NavbarWidget({super.key});
 
   @override
-  ConsumerState<NavbarWidget> createState() => _NavbarWidgetState();
+  riverpod.ConsumerState<NavbarWidget> createState() => _NavbarWidgetState();
 }
 
-class _NavbarWidgetState extends ConsumerState<NavbarWidget> {
+class _NavbarWidgetState extends riverpod.ConsumerState<NavbarWidget> {
   bool _isScrolled = false;
   bool _isMenuOpen = false;
-  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    _scrollController.addListener(_onScroll);
-  }
-
-  @override
-  void dispose() {
-    _scrollController.removeListener(_onScroll);
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  void _onScroll() {
-    final scrolled = _scrollController.hasClients && _scrollController.offset > 50;
-    if (scrolled != _isScrolled) {
-      setState(() {
-        _isScrolled = scrolled;
-      });
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Listen to scroll events from the nearest scrollable
+    });
   }
 
   void _toggleMenu() {
@@ -63,74 +45,99 @@ class _NavbarWidgetState extends ConsumerState<NavbarWidget> {
   void _handleLogout() {
     ref.read(authServiceProvider).logout();
     _closeMenu();
-    Navigator.of(context).pushReplacementNamed(AppRoutes.login);
+    Navigator.of(context).pushReplacementNamed('/login');
+  }
+
+  void _navigateTo(String route) {
+    _closeMenu();
+    Navigator.of(context).pushReplacementNamed(route);
   }
 
   @override
   Widget build(BuildContext context) {
     final currentRoute = ModalRoute.of(context)?.settings.name ?? '/';
     
-    return Container(
-      height: 80,
-      decoration: BoxDecoration(
-        color: (_isScrolled || _isMenuOpen) 
-            ? Colors.black 
-            : Colors.transparent,
-        border: Border(
-          bottom: BorderSide(
-            color: Colors.white.withOpacity(0.1),
-            width: 1,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          height: 80,
+          decoration: BoxDecoration(
+            color: (_isScrolled || _isMenuOpen) 
+                ? Colors.black 
+                : const Color(0xFF141414),
+            border: Border(
+              bottom: BorderSide(
+                color: Colors.white.withOpacity(0.1),
+                width: 1,
+              ),
+            ),
+          ),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final isMobile = constraints.maxWidth < 992; // lg breakpoint
+
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  children: [
+                    // Brand Logo
+                    _buildBrandLogo(context),
+                    
+                    if (isMobile) ...[
+                      const Spacer(),
+                      _buildMobileMenuButton(),
+                      const SizedBox(width: 12),
+                      _buildProfileAvatar(),
+                    ] else ...[
+                      const SizedBox(width: 40),
+                      // Desktop Navigation
+                      Expanded(
+                        child: Row(
+                          children: [
+                            _buildNavItems(currentRoute, false),
+                            const Spacer(),
+                            _buildProfileAvatar(),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              );
+            },
           ),
         ),
-      ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final isMobile = constraints.maxWidth < 992; // lg breakpoint
-
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
+        // Mobile Menu Overlay
+        if (_isMenuOpen)
+          Container(
+            color: Colors.black,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Brand Logo
-                _buildBrandLogo(context),
-                
-                if (isMobile) ...[
-                  const Spacer(),
-                  _buildMobileMenuButton(),
-                ] else ...[
-                  const SizedBox(width: 40),
-                  // Desktop Navigation
-                  Expanded(
-                    child: Row(
-                      children: [
-                        _buildNavItems(currentRoute, false),
-                        const Spacer(),
-                        _buildSearchBar(),
-                        const SizedBox(width: 16),
-                        _buildLogoutButton(),
-                      ],
-                    ),
-                  ),
-                ],
+                _buildMobileNavItems(currentRoute),
+                const SizedBox(height: 16),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: _buildLogoutButton(),
+                ),
+                const SizedBox(height: 16),
               ],
             ),
-          );
-        },
-      ),
+          ),
+      ],
     );
   }
 
   /// Build brand logo
   Widget _buildBrandLogo(BuildContext context) {
     return InkWell(
-      onTap: () {
-        _closeMenu();
-        Navigator.of(context).pushReplacementNamed(AppRoutes.home);
-      },
+      onTap: () => _navigateTo('/home'),
       child: const Text(
         'SAHBIFLIX',
         style: TextStyle(
-          color: Colors.red,
+          color: Color(0xFFDC2626),
           fontSize: 24,
           fontWeight: FontWeight.bold,
         ),
@@ -141,11 +148,10 @@ class _NavbarWidgetState extends ConsumerState<NavbarWidget> {
   /// Build navigation items
   Widget _buildNavItems(String currentRoute, bool isMobile) {
     final navItems = [
-      ('Home', AppRoutes.home),
-      ('TV Shows', AppRoutes.tv),
-      ('Movies', AppRoutes.movie),
-      ('Search', AppRoutes.search),
-      ('Profile', AppRoutes.profile),
+      ('Home', '/home'),
+      ('TV Shows', '/tv'),
+      ('Movies', '/movie'),
+      ('Profile', '/profile'),
     ];
 
     return Row(
@@ -157,10 +163,41 @@ class _NavbarWidgetState extends ConsumerState<NavbarWidget> {
         return _NavItem(
           label: label,
           isActive: isActive,
-          onTap: () {
-            _closeMenu();
-            Navigator.of(context).pushReplacementNamed(route);
-          },
+          onTap: () => _navigateTo(route),
+        );
+      }).toList(),
+    );
+  }
+
+  /// Build mobile navigation items (vertical list)
+  Widget _buildMobileNavItems(String currentRoute) {
+    final navItems = [
+      ('Home', '/home'),
+      ('TV Shows', '/tv'),
+      ('Movies', '/movie'),
+      ('Profile', '/profile'),
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: navItems.map((item) {
+        final (label, route) = item;
+        final isActive = currentRoute == route;
+
+        return InkWell(
+          onTap: () => _navigateTo(route),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            color: isActive ? Colors.white.withOpacity(0.1) : null,
+            child: Text(
+              label,
+              style: TextStyle(
+                color: isActive ? Colors.white : const Color(0xFFB3B3B3),
+                fontSize: 16,
+                fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+              ),
+            ),
+          ),
         );
       }).toList(),
     );
@@ -178,20 +215,52 @@ class _NavbarWidgetState extends ConsumerState<NavbarWidget> {
     );
   }
 
-  /// Build search bar (placeholder)
-  Widget _buildSearchBar() {
-    // TODO: Replace with SearchBarWidget when converted
-    return Container(
-      width: 200,
-      height: 40,
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: const Center(
-        child: Text(
-          'Search...',
-          style: TextStyle(color: Colors.white60, fontSize: 14),
+  /// Build profile avatar
+  Widget _buildProfileAvatar() {
+    final currentUser = ref.watch(currentUserProvider);
+    
+    ImageProvider? backgroundImage;
+    if (currentUser?.profilePicture != null) {
+      final profilePic = currentUser!.profilePicture!;
+      if (profilePic.startsWith('data:image')) {
+        // Base64 image
+        try {
+          final base64String = profilePic.split(',')[1];
+          final bytes = base64Decode(base64String);
+          backgroundImage = MemoryImage(bytes);
+        } catch (e) {
+          // If decoding fails, use default
+          backgroundImage = null;
+        }
+      } else if (profilePic.startsWith('http')) {
+        // Network URL
+        backgroundImage = NetworkImage(profilePic);
+      }
+    }
+    
+    return InkWell(
+      onTap: () => _navigateTo('/profile'),
+      borderRadius: BorderRadius.circular(100),
+      child: Container(
+        padding: const EdgeInsets.all(2),
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: const Color(0xFFDC2626),
+            width: 2,
+          ),
+        ),
+        child: CircleAvatar(
+          radius: 16,
+          backgroundColor: const Color(0xFFDC2626),
+          backgroundImage: backgroundImage,
+          child: backgroundImage == null
+              ? const Icon(
+                  Icons.person,
+                  size: 18,
+                  color: Colors.white,
+                )
+              : null,
         ),
       ),
     );
@@ -203,7 +272,7 @@ class _NavbarWidgetState extends ConsumerState<NavbarWidget> {
       onTap: _handleLogout,
       borderRadius: BorderRadius.circular(8),
       child: Container(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
           border: Border.all(
             color: const Color(0xFFDC2626).withOpacity(0.5),

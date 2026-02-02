@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/tmdb_models.dart';
-import '../../config/routes.dart';
+import '../../pages/genre/genre_content_page.dart';
 
 /// GenreCell Widget - Individual genre item with hover effect
 /// 
@@ -27,15 +27,15 @@ class _GenreCellWidgetState extends State<GenreCellWidget> {
   bool _isHovered = false;
 
   void _handleClick(BuildContext context) {
-    // Navigate to genre page with content type and genre ID
-    // Route: /genre/:contentType/:genreId?name=genreName
-    Navigator.of(context).pushNamed(
-      '${AppRoutes.genre}/${widget.contentType}/${widget.genre.id}',
-      arguments: {
-        'name': widget.genre.name,
-        'genreId': widget.genre.id,
-        'contentType': widget.contentType,
-      },
+    // Navigate to genre content page
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => GenreContentPage(
+          contentType: widget.contentType,
+          genreId: widget.genre.id.toString(),
+          genreName: widget.genre.name,
+        ),
+      ),
     );
   }
 

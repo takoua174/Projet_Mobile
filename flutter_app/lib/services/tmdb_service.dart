@@ -147,6 +147,104 @@ class TmdbService {
       throw Exception('Failed to load TV genres: $e');
     }
   }
+
+  /// Discover movies by genre (returns map with results)
+  Future<Map<String, dynamic>> discoverMovies({String? genres, int page = 1}) async {
+    try {
+      final queryParams = {
+        'api_key': AppConfig.tmdbApiKey,
+        'page': page.toString(),
+        if (genres != null) 'with_genres': genres,
+      };
+      final response = await _dio.get('${AppConfig.tmdbBaseUrl}/discover/movie', queryParameters: queryParams);
+      return response.data;
+    } catch (e) {
+      throw Exception('Failed to discover movies: $e');
+    }
+  }
+
+  /// Discover TV shows by genre (returns map with results)
+  Future<Map<String, dynamic>> discoverTVShows({String? genres, int page = 1}) async {
+    try {
+      final queryParams = {
+        'api_key': AppConfig.tmdbApiKey,
+        'page': page.toString(),
+        if (genres != null) 'with_genres': genres,
+      };
+      final response = await _dio.get('${AppConfig.tmdbBaseUrl}/discover/tv', queryParameters: queryParams);
+      return response.data;
+    } catch (e) {
+      throw Exception('Failed to discover TV shows: $e');
+    }
+  }
+
+  /// Get trending movies
+  Future<List<MovieDetails>> getTrendingMovies(String timeWindow, {int page = 1}) async {
+    try {
+      final response = await _dio.get(
+        '${AppConfig.tmdbBaseUrl}/trending/movie/$timeWindow',
+        queryParameters: {
+          'api_key': AppConfig.tmdbApiKey,
+          'page': page.toString(),
+        },
+      );
+      final list = response.data['results'] as List;
+      return list.map((e) => MovieDetails.fromJson(e)).toList();
+    } catch (e) {
+      throw Exception('Failed to load trending movies: $e');
+    }
+  }
+
+  /// Get trending TV shows
+  Future<List<TVShowDetails>> getTrendingTVShows(String timeWindow, {int page = 1}) async {
+    try {
+      final response = await _dio.get(
+        '${AppConfig.tmdbBaseUrl}/trending/tv/$timeWindow',
+        queryParameters: {
+          'api_key': AppConfig.tmdbApiKey,
+          'page': page.toString(),
+        },
+      );
+      final list = response.data['results'] as List;
+      return list.map((e) => TVShowDetails.fromJson(e)).toList();
+    } catch (e) {
+      throw Exception('Failed to load trending TV shows: $e');
+    }
+  }
+
+  /// Get top rated movies
+  Future<List<MovieDetails>> getTopRatedMovies({int page = 1}) async {
+    try {
+      final response = await _dio.get(
+        '${AppConfig.tmdbBaseUrl}/movie/top_rated',
+        queryParameters: {
+          'api_key': AppConfig.tmdbApiKey,
+          'page': page.toString(),
+        },
+      );
+      final list = response.data['results'] as List;
+      return list.map((e) => MovieDetails.fromJson(e)).toList();
+    } catch (e) {
+      throw Exception('Failed to load top rated movies: $e');
+    }
+  }
+
+  /// Get top rated TV shows
+  Future<List<TVShowDetails>> getTopRatedTVShows({int page = 1}) async {
+    try {
+      final response = await _dio.get(
+        '${AppConfig.tmdbBaseUrl}/tv/top_rated',
+        queryParameters: {
+          'api_key': AppConfig.tmdbApiKey,
+          'page': page.toString(),
+        },
+      );
+      final list = response.data['results'] as List;
+      return list.map((e) => TVShowDetails.fromJson(e)).toList();
+    } catch (e) {
+      throw Exception('Failed to load top rated TV shows: $e');
+    }
+  }
 }
 
 
