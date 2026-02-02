@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' as riverpod;
 import 'config/app_theme.dart';
 import 'providers/auth_provider.dart';
 import 'services/api_service.dart';
@@ -9,9 +10,14 @@ import 'pages/auth/login_page.dart';
 import 'pages/auth/register_page.dart';
 import 'pages/profile/profile_page.dart';
 import 'pages/home/home_page.dart';
+import 'pages/home/home_screen.dart'; // New migrated home screen
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    const riverpod.ProviderScope(
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -43,6 +49,7 @@ class MyApp extends StatelessWidget {
           '/login': (context) => const LoginPage(),
           '/register': (context) => const RegisterPage(),
           '/home': (context) => const HomePage(),
+          '/home-new': (context) => const HomeScreen(), // New migrated screen for testing
           '/profile': (context) => const ProfilePage(),
         },
       ),
@@ -67,14 +74,14 @@ class _SplashScreenState extends State<SplashScreen> {
   Future<void> _checkAuth() async {
 
 
-    // ============================================================================
-    /*
-    // For testing without backend, skip auth check and go straight to home
-    await Future.delayed(const Duration(seconds: 1));
-    if (!mounted) return;
-    Navigator.of(context).pushReplacementNamed('/home');
-    */
-    // ============================================================================
+    // // ============================================================================
+
+    // // For testing without backend, skip auth check and go straight to home
+    // await Future.delayed(const Duration(seconds: 1));
+    // if (!mounted) return;
+    // Navigator.of(context).pushReplacementNamed('/home');
+  
+    // // ============================================================================
 
 
 

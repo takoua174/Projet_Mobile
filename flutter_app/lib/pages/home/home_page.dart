@@ -109,6 +109,21 @@ class HomePage extends StatelessWidget {
               const SizedBox(height: 32),
               ElevatedButton.icon(
                 onPressed: () {
+                  Navigator.of(context).pushNamed('/home-new');
+                },
+                icon: const Icon(Icons.dashboard),
+                label: const Text('Test New Migrated Home'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 16,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: () {
                   Navigator.of(context).pushNamed('/profile');
                 },
                 icon: const Icon(Icons.person),

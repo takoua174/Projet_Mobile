@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' as riverpod;
 import '../models/auth_model.dart';
 import '../services/api_service.dart';
 
@@ -138,3 +139,27 @@ class AuthProvider with ChangeNotifier {
     }
   }
 }
+
+// ========== Riverpod Providers for HomeScreen Migration ==========
+
+/// API Service Provider
+final apiServiceProvider = riverpod.Provider<ApiService>((ref) {
+  return ApiService();
+});
+
+/// Auth Provider (ChangeNotifier)
+final authChangeNotifierProvider = riverpod.ChangeNotifierProvider<AuthProvider>((ref) {
+  final apiService = ref.watch(apiServiceProvider);
+  return AuthProvider(apiService);
+});
+
+/// Current User Provider (Riverpod)
+final currentUserProvider = riverpod.Provider<User?>((ref) {
+  final authProvider = ref.watch(authChangeNotifierProvider);
+  return authProvider.currentUser;
+});
+
+/// Auth Service Provider (for compatibility with HomeScreen)
+final authServiceProvider = riverpod.Provider<ApiService>((ref) {
+  return ref.watch(apiServiceProvider);
+});

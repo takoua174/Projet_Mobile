@@ -119,6 +119,34 @@ class TmdbService {
       throw Exception('Failed to load similar TV shows: $e');
     }
   }
+
+  /// Get movie genres
+  /// Added for HomeScreen migration
+  Future<List<Genre>> getMovieGenres() async {
+    try {
+      final response = await _dio.get('${AppConfig.tmdbBaseUrl}/genre/movie/list', queryParameters: {
+        'api_key': AppConfig.tmdbApiKey,
+      });
+      final list = response.data['genres'] as List;
+      return list.map((e) => Genre.fromJson(e)).toList();
+    } catch (e) {
+      throw Exception('Failed to load movie genres: $e');
+    }
+  }
+
+  /// Get TV genres
+  /// Added for HomeScreen migration
+  Future<List<Genre>> getTVGenres() async {
+    try {
+      final response = await _dio.get('${AppConfig.tmdbBaseUrl}/genre/tv/list', queryParameters: {
+        'api_key': AppConfig.tmdbApiKey,
+      });
+      final list = response.data['genres'] as List;
+      return list.map((e) => Genre.fromJson(e)).toList();
+    } catch (e) {
+      throw Exception('Failed to load TV genres: $e');
+    }
+  }
 }
 
 
