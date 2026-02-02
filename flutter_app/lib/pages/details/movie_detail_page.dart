@@ -372,11 +372,14 @@ class _MovieDetailScaffold extends riverpod.ConsumerWidget {
                     children: [
                       Row(
                         children: [
-                          Text(
-                            review['author'] ?? 'Anonymous',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
+                          Flexible(
+                            child: Text(
+                              review['author'] ?? 'Anonymous',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -410,6 +413,7 @@ class _MovieDetailScaffold extends riverpod.ConsumerWidget {
                     ],
                   ),
                 ),
+                const SizedBox(width: 8),
                 if (review['author_details']?['rating'] != null)
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),

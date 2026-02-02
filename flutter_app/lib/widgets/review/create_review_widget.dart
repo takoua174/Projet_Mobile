@@ -289,7 +289,7 @@ class _CreateReviewWidgetState extends riverpod.ConsumerState<CreateReviewWidget
 
         // Rating selector
         const Text(
-          'Rating (Optional)',
+          'Rating *',
           style: TextStyle(
             color: Colors.white,
             fontSize: 15,
