@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
+import 'dart:convert';
 import '../../models/tmdb_models.dart';
 import '../../services/tmdb_service.dart';
+import '../../services/api_service.dart';
 import '../../providers/movie_detail_provider.dart';
 import '../../config/environment.dart';
+import '../../widgets/review/create_review_widget.dart';
 import 'widgets/widgets.dart';
 
 class MovieDetailPage extends StatelessWidget {
@@ -19,6 +22,7 @@ class MovieDetailPage extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (context) => MovieDetailProvider(
         Provider.of<TmdbService>(context, listen: false),
+        Provider.of<ApiService>(context, listen: false),
       )..loadMovie(id),
       child: const _MovieDetailScaffold(),
     );
@@ -70,9 +74,38 @@ class _MovieDetailScaffold extends StatelessWidget {
              const SliverToBoxAdapter(child: SectionHeader(title: "Videos")),
              SliverToBoxAdapter(child: VideoCarouselWidget(videos: provider.videos)),
           ],
-          if (provider.reviews.isNotEmpty) ...[
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: CreateReviewWidget(
+                movieId: movie.id.toString(),
+                movieTitle: movie.title,
+                onReviewCreated: () {
+                  // Reload only reviews after creating a new one
+                  provider.loadReviews(movie.id);
+                },
+              ),
+            ),
+          ),
+          if (provider.userReviews.isNotEmpty || provider.reviews.isNotEmpty) ...[
              const SliverToBoxAdapter(child: SectionHeader(title: "Reviews")),
-             ReviewListWidget(reviews: provider.reviews),
+             SliverList(
+               delegate: SliverChildBuilderDelegate(
+                 (context, index) {
+                   if (index < provider.userReviews.length) {
+                     // User reviews from local API
+                     final review = provider.userReviews[index];
+                     return _buildUserReviewCard(review);
+                   } else {
+                     // TMDB reviews
+                     final tmdbIndex = index - provider.userReviews.length;
+                     final review = provider.reviews[tmdbIndex];
+                     return _buildTmdbReviewCard(review);
+                   }
+                 },
+                 childCount: provider.userReviews.length + provider.reviews.length,
+               ),
+             ),
           ],
            const SliverToBoxAdapter(child: SizedBox(height: 30)),
         ],
@@ -235,6 +268,239 @@ class _MovieDetailScaffold extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Widget _buildUserReviewCard(dynamic review) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: Colors.white.withOpacity(0.1),
+            width: 1,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildProfileAvatar(
+                  review['author_details']?['profile_image'],
+                  review['author'],
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            review['author'] ?? 'Anonymous',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF667eea).withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: const Text(
+                              'User Review',
+                              style: TextStyle(
+                                color: Color(0xFF667eea),
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        review['created_at'] != null
+                            ? _formatDate(review['created_at'])
+                            : '',
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.6),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (review['author_details']?['rating'] != null)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFffd700).withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      '★ ${review['author_details']['rating']}/10',
+                      style: const TextStyle(
+                        color: Color(0xFFffd700),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              review['content'] ?? '',
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.9),
+                fontSize: 14,
+                height: 1.5,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTmdbReviewCard(Review review) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: Colors.white.withOpacity(0.1),
+            width: 1,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                CircleAvatar(
+                  radius: 20,
+                  backgroundColor: Colors.grey[800],
+                  child: Text(
+                    review.author[0].toUpperCase(),
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            review.author,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: const Text(
+                              'TMDB',
+                              style: TextStyle(
+                                color: Colors.orange,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        _formatDate(review.createdAt),
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.6),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              review.content,
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.9),
+                fontSize: 14,
+                height: 1.5,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProfileAvatar(String? profileImage, String? author) {
+    // Handle base64 images
+    if (profileImage != null && profileImage.isNotEmpty) {
+      if (profileImage.startsWith('data:image')) {
+        try {
+          final base64String = profileImage.split(',')[1];
+          final bytes = base64Decode(base64String);
+          return CircleAvatar(
+            radius: 20,
+            backgroundImage: MemoryImage(bytes),
+            backgroundColor: const Color(0xFFDC2626),
+          );
+        } catch (e) {
+          // Fall through to default avatar
+        }
+      } else if (profileImage.startsWith('http')) {
+        return CircleAvatar(
+          radius: 20,
+          backgroundImage: NetworkImage(profileImage),
+          backgroundColor: const Color(0xFFDC2626),
+        );
+      }
+    }
+    
+    // Default avatar with first letter
+    return CircleAvatar(
+      radius: 20,
+      backgroundColor: const Color(0xFFDC2626),
+      child: Text(
+        author?[0]?.toUpperCase() ?? 'U',
+        style: const TextStyle(color: Colors.white),
+      ),
+    );
+  }
+
+  String _formatDate(String? dateString) {
+    if (dateString == null || dateString.isEmpty) return '';
+    try {
+      final date = DateTime.parse(dateString);
+      return DateFormat.yMMMd().format(date);
+    } catch (e) {
+      return dateString; // Return as-is if parsing fails
+    }
   }
 }
 

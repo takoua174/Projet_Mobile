@@ -186,6 +186,36 @@ class ApiService {
     }
   }
 
+  Future<Map<String, dynamic>> createReview({
+    required String movieId,
+    required String author,
+    required Map<String, dynamic> authorDetails,
+    required String content,
+    String? url,
+  }) async {
+    try {
+      final response = await _dio.post('/reviews', data: {
+        'movie_id': movieId,
+        'author': author,
+        'author_details': authorDetails,
+        'content': content,
+        if (url != null) 'url': url,
+      });
+      return response.data;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<List<dynamic>> getReviewsByMovieId(String movieId) async {
+    try {
+      final response = await _dio.get('/reviews/movie/$movieId');
+      return response.data as List<dynamic>;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
   String _handleError(DioException error) {
     if (error.response?.data != null) {
       final data = error.response!.data;
