@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' as riverpod;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
 import 'dart:convert';
 import '../../models/tmdb_models.dart';
 import '../../services/tmdb_service.dart';
 import '../../services/api_service.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/movie_detail_provider.dart';
 import '../../config/environment.dart';
 import '../../widgets/review/create_review_widget.dart';
@@ -29,13 +31,14 @@ class MovieDetailPage extends StatelessWidget {
   }
 }
 
-class _MovieDetailScaffold extends StatelessWidget {
+class _MovieDetailScaffold extends riverpod.ConsumerWidget {
   const _MovieDetailScaffold();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, riverpod.WidgetRef ref) {
     final provider = Provider.of<MovieDetailProvider>(context);
     final movie = provider.movie;
+    final currentUser = ref.watch(currentUserProvider);
 
     if (provider.isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -95,7 +98,7 @@ class _MovieDetailScaffold extends StatelessWidget {
                    if (index < provider.userReviews.length) {
                      // User reviews from local API
                      final review = provider.userReviews[index];
-                     return _buildUserReviewCard(review);
+                     return _buildUserReviewCard(context, ref, review, currentUser, provider);
                    } else {
                      // TMDB reviews
                      final tmdbIndex = index - provider.userReviews.length;
@@ -270,7 +273,16 @@ class _MovieDetailScaffold extends StatelessWidget {
     );
   }
 
-  Widget _buildUserReviewCard(dynamic review) {
+  Widget _buildUserReviewCard(
+    BuildContext context,
+    riverpod.WidgetRef ref,
+    dynamic review,
+    dynamic currentUser,
+    MovieDetailProvider provider,
+  ) {
+    final isOwnReview = currentUser != null && 
+                        review['author'] == currentUser.username;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Container(
@@ -354,6 +366,17 @@ class _MovieDetailScaffold extends StatelessWidget {
                       ),
                     ),
                   ),
+                if (isOwnReview) ...[
+                  const SizedBox(width: 8),
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline, size: 20),
+                    color: const Color(0xFFDC2626),
+                    onPressed: () => _deleteReview(context, ref, review, provider),
+                    tooltip: 'Delete review',
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ],
               ],
             ),
             const SizedBox(height: 12),
@@ -369,6 +392,96 @@ class _MovieDetailScaffold extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _deleteReview(
+    BuildContext context,
+    riverpod.WidgetRef ref,
+    dynamic review,
+    MovieDetailProvider provider,
+  ) async {
+    // Show confirmation dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1F1F1F),
+        title: const Text(
+          'Delete Review',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: const Text(
+          'Are you sure you want to delete this review?',
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: TextButton.styleFrom(
+              foregroundColor: const Color(0xFFDC2626),
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      final apiService = ref.read(apiServiceProvider);
+      await apiService.deleteReview(review['id']);
+      
+      // Reload reviews
+      if (provider.movie != null) {
+        await provider.loadReviews(provider.movie!.id);
+      }
+
+      // Show success snackbar
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 8),
+                Text('Review deleted successfully'),
+              ],
+            ),
+            backgroundColor: const Color(0xFF22c55e),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      // Show error snackbar
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error_outline, color: Colors.white),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text('Failed to delete review: ${e.toString()}'),
+                ),
+              ],
+            ),
+            backgroundColor: const Color(0xFFDC2626),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        );
+      }
+    }
   }
 
   Widget _buildTmdbReviewCard(Review review) {
@@ -487,7 +600,7 @@ class _MovieDetailScaffold extends StatelessWidget {
       radius: 20,
       backgroundColor: const Color(0xFFDC2626),
       child: Text(
-        author?[0]?.toUpperCase() ?? 'U',
+        author?[0].toUpperCase() ?? 'U',
         style: const TextStyle(color: Colors.white),
       ),
     );

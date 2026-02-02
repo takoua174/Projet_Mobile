@@ -216,6 +216,14 @@ class ApiService {
     }
   }
 
+  Future<void> deleteReview(String reviewId) async {
+    try {
+      await _dio.delete('/reviews/$reviewId');
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
   String _handleError(DioException error) {
     if (error.response?.data != null) {
       final data = error.response!.data;
