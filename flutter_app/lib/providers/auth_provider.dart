@@ -138,6 +138,26 @@ class AuthProvider with ChangeNotifier {
       // Silent fail
     }
   }
+
+  Future<bool> toggleFavorite(int contentId, String contentType) async {
+    try {
+      final isFavorite = await _apiService.toggleFavorite(contentId, contentType);
+      // Refresh profile to get updated favorites
+      await refreshProfile();
+      return true;
+    } catch (e) {
+      setError(e.toString());
+      return false;
+    }
+  }
+
+  bool isFavoriteMovie(int movieId) {
+    return _currentUser?.favoriteMovies.contains(movieId) ?? false;
+  }
+
+  bool isFavoriteTvShow(int tvShowId) {
+    return _currentUser?.favoriteTvShows.contains(tvShowId) ?? false;
+  }
 }
 
 // ========== Riverpod Providers for HomeScreen Migration ==========

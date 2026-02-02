@@ -59,7 +59,7 @@ class _MovieDetailScaffold extends riverpod.ConsumerWidget {
       body: CustomScrollView(
         slivers: [
           _buildSliverAppBar(context, movie),
-          SliverToBoxAdapter(child: _buildHeaderInfo(context, movie)),
+          SliverToBoxAdapter(child: _buildHeaderInfo(context, movie, ref)),
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
@@ -110,6 +110,23 @@ class _MovieDetailScaffold extends riverpod.ConsumerWidget {
                ),
              ),
           ],
+          if (provider.similarMovies.isNotEmpty) ...[
+            const SliverToBoxAdapter(child: SectionHeader(title: "Similar Movies")),
+            SliverToBoxAdapter(
+              child: SizedBox(
+                height: 280,
+                child: ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  scrollDirection: Axis.horizontal,
+                  itemCount: provider.similarMovies.take(12).length,
+                  itemBuilder: (context, index) {
+                    final movie = provider.similarMovies[index];
+                    return _buildSimilarMovieCard(context, movie);
+                  },
+                ),
+              ),
+            ),
+          ],
            const SliverToBoxAdapter(child: SizedBox(height: 30)),
         ],
       ),
@@ -154,7 +171,10 @@ class _MovieDetailScaffold extends riverpod.ConsumerWidget {
     );
   }
 
-  Widget _buildHeaderInfo(BuildContext context, MovieDetails movie) {
+  Widget _buildHeaderInfo(BuildContext context, MovieDetails movie, riverpod.WidgetRef ref) {
+    final authProvider = ref.watch(authChangeNotifierProvider);
+    final isFavorite = authProvider.isFavoriteMovie(movie.id);
+    
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       child: Column(
@@ -244,6 +264,7 @@ class _MovieDetailScaffold extends riverpod.ConsumerWidget {
             ),
           ),
           const SizedBox(height: 8),
+          const SizedBox(height: 16),
           // Action Buttons
           Row(
             children: [
@@ -259,12 +280,51 @@ class _MovieDetailScaffold extends riverpod.ConsumerWidget {
                 ),
               ),
                const SizedBox(width: 16),
-               IconButton(
-                onPressed: () {
-                  // Toggle favorite logic
-                },
-                icon: const Icon(Icons.favorite_border),
-                tooltip: "Add to Favorites",
+               Expanded(
+                 child: OutlinedButton.icon(
+                   onPressed: authProvider.isAuthenticated
+                       ? () async {
+                           final success = await authProvider.toggleFavorite(
+                             movie.id,
+                             'movie',
+                           );
+                           if (context.mounted) {
+                             ScaffoldMessenger.of(context).showSnackBar(
+                               SnackBar(
+                                 content: Text(
+                                   success
+                                       ? (isFavorite
+                                           ? 'Removed from favorites'
+                                           : 'Added to favorites')
+                                       : 'Failed to update favorites',
+                                 ),
+                                 backgroundColor: success
+                                     ? const Color(0xFF22c55e)
+                                     : const Color(0xFFDC2626),
+                                 behavior: SnackBarBehavior.floating,
+                                 duration: const Duration(seconds: 2),
+                               ),
+                             );
+                           }
+                         }
+                       : () {
+                           ScaffoldMessenger.of(context).showSnackBar(
+                             const SnackBar(
+                               content: Text('Please login to add favorites'),
+                               backgroundColor: Color(0xFFDC2626),
+                               behavior: SnackBarBehavior.floating,
+                             ),
+                           );
+                         },
+                   icon: Icon(
+                     isFavorite ? Icons.favorite : Icons.favorite_border,
+                   ),
+                   label: Text(isFavorite ? "Favorited" : "Favorite"),
+                   style: OutlinedButton.styleFrom(
+                     foregroundColor: Colors.red,
+                     side: const BorderSide(color: Colors.red),
+                   ),
+                 ),
                ),
             ],
           ),
@@ -614,6 +674,65 @@ class _MovieDetailScaffold extends riverpod.ConsumerWidget {
     } catch (e) {
       return dateString; // Return as-is if parsing fails
     }
+  }
+
+  Widget _buildSimilarMovieCard(BuildContext context, MovieDetails movie) {
+    return Container(
+      width: 140,
+      margin: const EdgeInsets.only(right: 12),
+      child: InkWell(
+        onTap: () {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => MovieDetailPage(id: movie.id),
+            ),
+          );
+        },
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: movie.posterPath != null
+                  ? CachedNetworkImage(
+                      imageUrl: '${AppConfig.tmdbImageBaseUrl}/w300${movie.posterPath}',
+                      height: 210,
+                      width: 140,
+                      fit: BoxFit.cover,
+                    )
+                  : Container(
+                      height: 210,
+                      width: 140,
+                      color: Colors.grey[800],
+                      child: const Icon(Icons.movie, size: 50),
+                    ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              movie.title,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                const Icon(Icons.star, color: Colors.amber, size: 14),
+                const SizedBox(width: 4),
+                Text(
+                  movie.voteAverage.toStringAsFixed(1),
+                  style: const TextStyle(fontSize: 12),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

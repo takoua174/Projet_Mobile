@@ -163,12 +163,13 @@ class ApiService {
     }
   }
 
-  Future<void> toggleFavorite(int contentId, String type) async {
+  Future<bool> toggleFavorite(int contentId, String contentType) async {
     try {
-      await _dio.post('/users/favorites', data: {
+      final response = await _dio.post('/users/favorites/toggle', data: {
         'contentId': contentId,
-        'type': type,
+        'contentType': contentType,
       });
+      return response.data['isFavorite'] ?? false;
     } on DioException catch (e) {
       throw _handleError(e);
     }

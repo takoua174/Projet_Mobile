@@ -13,7 +13,7 @@ class CastListWidget extends StatelessWidget {
     if (cast.isEmpty) return const SizedBox.shrink();
 
     return SizedBox(
-      height: 120,
+      height: 130,
       child: ListView.builder(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         scrollDirection: Axis.horizontal,
@@ -22,28 +22,31 @@ class CastListWidget extends StatelessWidget {
           final actor = cast[index];
           return Padding(
             padding: const EdgeInsets.only(right: 16),
-            child: Column(
-              children: [
-                CircleAvatar(
-                  radius: 40,
-                  backgroundImage: actor.profilePath != null
-                      ? CachedNetworkImageProvider(
-                          '${AppConfig.tmdbImageBaseUrl}/w200${actor.profilePath}')
-                      : const AssetImage('assets/images/no_avatar.png')
-                          as ImageProvider,
-                ),
-                const SizedBox(height: 8),
-                SizedBox(
-                  width: 80,
-                  child: Text(
-                    actor.name,
-                    maxLines: 2,
-                    textAlign: TextAlign.center,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 12),
+            child: SizedBox(
+              width: 80,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircleAvatar(
+                    radius: 40,
+                    backgroundImage: actor.profilePath != null
+                        ? CachedNetworkImageProvider(
+                            '${AppConfig.tmdbImageBaseUrl}/w200${actor.profilePath}')
+                        : const AssetImage('assets/images/no_avatar.png')
+                            as ImageProvider,
                   ),
-                ),
-              ],
+                  const SizedBox(height: 8),
+                  Flexible(
+                    child: Text(
+                      actor.name,
+                      maxLines: 2,
+                      textAlign: TextAlign.center,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                  ),
+                ],
+              ),
             ),
           );
         },

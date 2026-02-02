@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' as riverpod;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
 import '../../models/tmdb_models.dart';
 import '../../services/tmdb_service.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/tv_detail_provider.dart';
 import '../../config/environment.dart';
 import 'widgets/widgets.dart';
@@ -24,13 +26,14 @@ class TvDetailPage extends StatelessWidget {
   }
 }
 
-class _TvDetailScaffold extends StatelessWidget {
+class _TvDetailScaffold extends riverpod.ConsumerWidget {
   const _TvDetailScaffold();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, riverpod.WidgetRef ref) {
     final provider = Provider.of<TvDetailProvider>(context);
     final tv = provider.tvShow;
+    final authProvider = ref.watch(authChangeNotifierProvider);
 
     if (provider.isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -51,7 +54,7 @@ class _TvDetailScaffold extends StatelessWidget {
       body: CustomScrollView(
         slivers: [
           _buildSliverAppBar(context, tv),
-          SliverToBoxAdapter(child: _buildHeaderInfo(context, tv)),
+          SliverToBoxAdapter(child: _buildHeaderInfo(context, tv, ref)),
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
@@ -74,6 +77,23 @@ class _TvDetailScaffold extends StatelessWidget {
           if (provider.videos.isNotEmpty) ...[
              const SliverToBoxAdapter(child: SectionHeader(title: "Videos")),
              SliverToBoxAdapter(child: VideoCarouselWidget(videos: provider.videos)),
+          ],
+          if (provider.similarShows.isNotEmpty) ...[
+            const SliverToBoxAdapter(child: SectionHeader(title: "Similar Shows")),
+            SliverToBoxAdapter(
+              child: SizedBox(
+                height: 280,
+                child: ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  scrollDirection: Axis.horizontal,
+                  itemCount: provider.similarShows.take(12).length,
+                  itemBuilder: (context, index) {
+                    final show = provider.similarShows[index];
+                    return _buildSimilarShowCard(context, show);
+                  },
+                ),
+              ),
+            ),
           ],
            const SliverToBoxAdapter(child: SizedBox(height: 30)),
         ],
@@ -119,7 +139,10 @@ class _TvDetailScaffold extends StatelessWidget {
     );
   }
 
-  Widget _buildHeaderInfo(BuildContext context, TVShowDetails tv) {
+  Widget _buildHeaderInfo(BuildContext context, TVShowDetails tv, riverpod.WidgetRef ref) {
+    final authProvider = ref.watch(authChangeNotifierProvider);
+    final isFavorite = authProvider.isFavoriteTvShow(tv.id);
+    
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       child: Column(
@@ -205,9 +228,63 @@ class _TvDetailScaffold extends StatelessWidget {
           // Action Buttons
           Row(
             children: [
-               IconButton(
-                onPressed: () {},
-                icon: const Icon(Icons.favorite_border),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () {},
+                  icon: const Icon(Icons.play_arrow),
+                  label: const Text("Play"),
+                  style: ElevatedButton.styleFrom(
+                     backgroundColor: Colors.red,
+                     foregroundColor: Colors.white,
+                  ),
+                ),
+              ),
+               const SizedBox(width: 16),
+               Expanded(
+                 child: OutlinedButton.icon(
+                   onPressed: authProvider.isAuthenticated
+                       ? () async {
+                           final success = await authProvider.toggleFavorite(
+                             tv.id,
+                             'tv',
+                           );
+                           if (context.mounted) {
+                             ScaffoldMessenger.of(context).showSnackBar(
+                               SnackBar(
+                                 content: Text(
+                                   success
+                                       ? (isFavorite
+                                           ? 'Removed from favorites'
+                                           : 'Added to favorites')
+                                       : 'Failed to update favorites',
+                                 ),
+                                 backgroundColor: success
+                                     ? const Color(0xFF22c55e)
+                                     : const Color(0xFFDC2626),
+                                 behavior: SnackBarBehavior.floating,
+                                 duration: const Duration(seconds: 2),
+                               ),
+                             );
+                           }
+                         }
+                       : () {
+                           ScaffoldMessenger.of(context).showSnackBar(
+                             const SnackBar(
+                               content: Text('Please login to add favorites'),
+                               backgroundColor: Color(0xFFDC2626),
+                               behavior: SnackBarBehavior.floating,
+                             ),
+                           );
+                         },
+                   icon: Icon(
+                     isFavorite ? Icons.favorite : Icons.favorite_border,
+                   ),
+                   label: Text(isFavorite ? "Favorited" : "Favorite"),
+                   style: OutlinedButton.styleFrom(
+                     foregroundColor: Colors.red,
+                     side: const BorderSide(color: Colors.red),
+                   ),
+                 ),
                ),
             ],
           ),
@@ -264,6 +341,65 @@ class _TvDetailScaffold extends StatelessWidget {
           },
         ),
       );
+  }
+
+  Widget _buildSimilarShowCard(BuildContext context, TVShowDetails show) {
+    return Container(
+      width: 140,
+      margin: const EdgeInsets.only(right: 12),
+      child: InkWell(
+        onTap: () {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => TvDetailPage(id: show.id),
+            ),
+          );
+        },
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: show.posterPath != null
+                  ? CachedNetworkImage(
+                      imageUrl: '${AppConfig.tmdbImageBaseUrl}/w300${show.posterPath}',
+                      height: 210,
+                      width: 140,
+                      fit: BoxFit.cover,
+                    )
+                  : Container(
+                      height: 210,
+                      width: 140,
+                      color: Colors.grey[800],
+                      child: const Icon(Icons.tv, size: 50),
+                    ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              show.name,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                const Icon(Icons.star, color: Colors.amber, size: 14),
+                const SizedBox(width: 4),
+                Text(
+                  show.voteAverage.toStringAsFixed(1),
+                  style: const TextStyle(fontSize: 12),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

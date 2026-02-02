@@ -153,8 +153,26 @@ class FavoritesResponse {
 
   factory FavoritesResponse.fromJson(Map<String, dynamic> json) {
     return FavoritesResponse(
-      movies: json['movies'] != null ? List<int>.from(json['movies']) : [],
-      tvShows: json['tvShows'] != null ? List<int>.from(json['tvShows']) : [],
+      movies: _parseIds(json['movies']),
+      tvShows: _parseIds(json['tvShows']),
     );
+  }
+
+  static List<int> _parseIds(dynamic data) {
+    if (data == null) return [];
+    
+    if (data is List) {
+      return data.map((item) {
+        if (item is int) {
+          return item;
+        } else if (item is Map) {
+          // If it's a map, try to extract 'id' field
+          return item['id'] as int? ?? 0;
+        }
+        return 0;
+      }).where((id) => id != 0).toList();
+    }
+    
+    return [];
   }
 }
