@@ -1,8 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart' as riverpod;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:dio/dio.dart';
 import '../../providers/auth_provider.dart';
@@ -13,14 +12,14 @@ import '../../models/auth_model.dart';
 import '../../models/tmdb_models.dart';
 import '../../widgets/navbar/navbar_widget.dart';
 
-class ProfilePage extends riverpod.ConsumerStatefulWidget {
+class ProfilePage extends ConsumerStatefulWidget {
   const ProfilePage({super.key});
 
   @override
-  riverpod.ConsumerState<ProfilePage> createState() => _ProfilePageState();
+  ConsumerState<ProfilePage> createState() => _ProfilePageState();
 }
 
-class _ProfilePageState extends riverpod.ConsumerState<ProfilePage>
+class _ProfilePageState extends ConsumerState<ProfilePage>
     with TickerProviderStateMixin {
   final _profileFormKey = GlobalKey<FormState>();
   final _passwordFormKey = GlobalKey<FormState>();
@@ -253,8 +252,9 @@ class _ProfilePageState extends riverpod.ConsumerState<ProfilePage>
           ],
         ),
         SliverToBoxAdapter(
-          child: Consumer<AuthProvider>(
-            builder: (context, authProvider, child) {
+          child: Builder(
+            builder: (context) {
+              final authProvider = ref.watch(authChangeNotifierProvider);
               if (authProvider.currentUser == null) {
                 return const Center(
                   child: Padding(
@@ -536,12 +536,15 @@ class _ProfilePageState extends riverpod.ConsumerState<ProfilePage>
                     color: AppTheme.textSecondary,
                   ),
                   const SizedBox(width: 8),
-                  Text(
-                    user.email,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: AppTheme.textSecondary,
-                      fontWeight: FontWeight.w500,
+                  Flexible(
+                    child: Text(
+                      user.email,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: AppTheme.textSecondary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
@@ -1267,8 +1270,7 @@ class _ProfilePageState extends riverpod.ConsumerState<ProfilePage>
       onTap: () {
         Navigator.pushNamed(
           context,
-          isMovie ? '/movie' : '/tv',
-          arguments: id,
+          isMovie ? '/movie/$id' : '/tv/$id',
         ).then((_) => _loadFavorites());
       },
       child: Container(

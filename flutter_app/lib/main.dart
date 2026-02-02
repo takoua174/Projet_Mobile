@@ -37,11 +37,6 @@ class MyApp extends StatelessWidget {
          Provider<TmdbService>( // Add TmdbService provider
           create: (_) => TmdbService(Dio()), // Ideally share the Dio instance or config
         ),
-        ChangeNotifierProvider<AuthProvider>(
-          create: (context) => AuthProvider(
-            Provider.of<ApiService>(context, listen: false),
-          ),
-        ),
       ],
       child: MaterialApp(
         title: 'SahbiFlix',
@@ -84,14 +79,14 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class SplashScreen extends StatefulWidget {
+class SplashScreen extends riverpod.ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  riverpod.ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _SplashScreenState extends riverpod.ConsumerState<SplashScreen> {
   @override
   void initState() {
     super.initState();
@@ -113,7 +108,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
 
     // Original Auth Logic
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final authProvider = ref.read(authChangeNotifierProvider);
     final apiService = Provider.of<ApiService>(context, listen: false);
 
     // Small delay for splash effect

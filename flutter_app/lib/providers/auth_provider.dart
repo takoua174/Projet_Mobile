@@ -47,6 +47,10 @@ class AuthProvider with ChangeNotifier {
       final response = await _apiService.login(request);
 
       _currentUser = response.user;
+      
+      // Fetch full profile to get profilePicture and other data not included in login response
+      await refreshProfile();
+      
       setLoading(false);
       notifyListeners();
       return true;
@@ -70,6 +74,10 @@ class AuthProvider with ChangeNotifier {
       final response = await _apiService.register(request);
 
       _currentUser = response.user;
+      
+      // Fetch full profile to get all user data
+      await refreshProfile();
+      
       setLoading(false);
       notifyListeners();
       return true;
